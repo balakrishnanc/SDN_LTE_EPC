@@ -70,7 +70,7 @@ Recommended specifications:
     ```
 5. Setting up Floodlight on Eclipse: The following command creates several files: Floodlight.launch, Floodlight_junit.launch, .classpath, and .project. From these you can setup a new Eclipse project.<br/>
     ```
-    ant eclipse
+    $ ant eclipse
     ```
     * Open eclipse and create a new workspace
     * **File -> Import -> General -> Existing Projects into Workspace**. Then click **Next**.
@@ -108,30 +108,36 @@ Recommended specifications:
 Following needs to be done for setting up OVS on all the three machines. Run the scripts present in the respective directories.
 
 1. Install Open vSwitch by running the script *install_ovs.sh* as superuser from the location of the file *openvswitch-2.3.2.tar.gz*.
-
-  `# sh install_ovs.sh`
+  ```
+  $ sh install_ovs.sh
+  ```
 2. After every restart, you need to run the script *openvswitch.sh* as superuser.
-
-  `# sh openvswitch.sh`
+  ```
+  $ sh openvswitch.sh
+  ```
 3. Run the script *config.sh* as superuser to create and connect the Open vSwitch to the floodlight controller.
-
-  `# sh config.sh`
+  ```
+  $ sh config.sh
+  ```
 4. Run the script *repair.sh* as superuser to disconnect the switch from the controller.
-
-  `# sh repair.sh`
+  ```
+  $ sh repair.sh
+  ```
 
 #### RAN Machine (UE/eNodeB) ####
 
 1. Install the dependencies using the following command:
-
-  `sudo apt-get install openjdk-7-jdk iperf3 gcc g++ libssl1.0.0/trusty libssl-dev/trusty openssl/trusty`
+  ```
+  $ sudo apt-get install openjdk-7-jdk iperf3 gcc g++ libssl1.0.0/trusty libssl-dev/trusty openssl/trusty
+  ```
 2. Change the configurable parameters in the file *utils.h* according to your setup.
 
 #### Sink Machine ####
 
 1. Install the dependencies using the following command:
-
-  `sudo apt-get install iperf3 gcc g++ libssl1.0.0/trusty libssl-dev/trusty openssl/trusty`
+  ```
+  $ sudo apt-get install iperf3 gcc g++ libssl1.0.0/trusty libssl-dev/trusty openssl/trusty
+  ```
 
 #### Setup configuration ####
 
@@ -157,32 +163,34 @@ If you do not have enough number of physical machines, you can use containers fo
 We connect the containers using linux bridge. Besides, we don't need the ethernet switch in this setup since containers can be configured for multiple NICs. Following are the steps for setup:
 
   1. Install LXC on the host machine using the following commands:
-    ```
-    $ sudo apt-get install lxc lxctl lxc-templates
-    $ sudo lxc-checkconfig
-    ```
+      ```
+      $ sudo apt-get install lxc lxctl lxc-templates
+      $ sudo lxc-checkconfig
+      ```
 
   2. Create 6 new containers with corresponding names for each component:
-    ```
-    $ sudo lxc-create -n ran -t ubuntu
-    $ sudo lxc-create -n default_switch -t ubuntu
-    $ sudo lxc-create -n sgw -t ubuntu
-    $ sudo lxc-create -n pgw -t ubuntu
-    $ sudo lxc-create -n sink -t ubuntu
-    $ sudo lxc-create -n controller -t ubuntu
-    ```
+      ```
+      $ sudo lxc-create -n ran -t ubuntu
+      $ sudo lxc-create -n default_switch -t ubuntu
+      $ sudo lxc-create -n sgw -t ubuntu
+      $ sudo lxc-create -n pgw -t ubuntu
+      $ sudo lxc-create -n sink -t ubuntu
+      $ sudo lxc-create -n controller -t ubuntu
+      ```
 
   3. To see the list of containers, run the following command:
-
-    `sudo lxc-ls --fancy`
+      ```
+      $ sudo lxc-ls --fancy
+      ```
 
   4. Now, we configure the network interface of the containers including IP address, MAC address, MTU, etc. Note that, by default, all the containers are connected to a common linux bridge *lxcbr0* through the *eth0* interface. This is used for connecting the containers to the host machine. So, we don't touch this interface and instead, add our own interfaces according to our requirements on the various containers. We add 1 interface (*eth1*) to the *ran* and *sink* containers whereas 3 interfaces (*eth1, eth2, eth3*) to the remaining 4 containers. we do this by modifying the configuration file of the containers. Open the file `/var/lib/lxc/<container_name>/config` to see the configuration settings. We have provided a file named *config* in the respective directories of the components under "scripts/containers/lxc_config". Append the content of *config* to the configuration settings file of the respective container. We can also map specific CPU cores to the containers as well as allocate RAM to each container. The commands for setting this configuration are commented in the *config* files under the heading "Control group configuration". Uncomment and modify as per your requirements.
 
   5. We need to create linux bridges in order to connect the containers as per Fig. 3. The script *setup.sh* in the directory "scripts/containers" creates the required linux bridges. Since the bridges are not persistent, you need to run this script each time you restart the host machine.
 
   6. To start each container, use the following command:
-
-  `sudo lxc-start -n <container_name> -d`
+      ```
+      $ sudo lxc-start -n <container_name> -d
+      ```
 
   We have provided the scripts *start.sh* and *stop.sh* under "scripts/containers" to start and stop all the containers respectively.
 
@@ -190,24 +198,26 @@ We connect the containers using linux bridge. Besides, we don't need the etherne
   *Note:* If any of the containers is not showing the allocated IP addresses (assigned in the config file), you need to manually specify the same IP addresses statically in the file "/etc/network/interfaces" of the container.
 
   8. Now, we log into the containers using SSH. The default username and password is "ubuntu" We use eth0 IP address of the containers to login.
-
-  `ssh ubuntu@<container_ip>`
+      ```
+      $ ssh ubuntu@<container_ip>
+      ```
 
   9. Since we require Eclipse for the controller, we need to install desktop environment on the controller container. Run the following command to install Unity desktop. This will take some time.
-
-  `sudo apt-get install ubuntu-desktop`
+      ```
+      $ sudo apt-get install ubuntu-desktop
+      ```
 
   *Note:* The controller container will take more time (~ 2 minutes) to start compared to other containers because of the desktop environment.
 
   10. After setting up the containers, the same above mentioned steps can be followed to setup each component. Use the scripts under "scripts/containers" instead of the scripts for the general setup.
-
-  *Note:* If you face problems while installing `iperf3` in the containers, use the following commands:
-    ```
-    $ sudo apt-get install software-properties-common
-    $ sudo add-apt-repository "ppa:patrickdk/general-lucid"
-    $ sudo apt-get update
-    $ sudo apt-get install iperf3
-    ```
+  
+      *Note:* If you face problems while installing `iperf3` in the containers, use the following commands:
+        ```
+        $ sudo apt-get install software-properties-common
+        $ sudo add-apt-repository "ppa:patrickdk/general-lucid"
+        $ sudo apt-get update
+        $ sudo apt-get install iperf3
+        ```
 
 #### How to run ? ####
 
@@ -216,12 +226,13 @@ We connect the containers using linux bridge. Besides, we don't need the etherne
 2. Start the OVS in DefaultSwitch/SGW/PGW by the running the script *openvswitch.sh* followed by *config.sh*. Note that you need not run *openvswitch.sh* if OVS is already running. Make sure that the switch connection notification for all the three switches is displayed in the controller console.
 
 3. Start the sink program by running the script *sink.sh* under "src/sink".
-
-    `$ sh sink.sh <sink_ip> <starting_port> <num_iperf3_servers>`
-
-  If you want to simulate "Network-initiated Service Request", run the script *service_request.sh* instead.
-
-    `$ sh service_request.sh <sink_ip> <starting_port> <num_servers>`
+    ```
+    $ sh sink.sh <sink_ip> <starting_port> <num_iperf3_servers>
+    ```
+    If you want to simulate "Network-initiated Service Request", run the script *service_request.sh* instead.
+      ```
+      $ sh service_request.sh <sink_ip> <starting_port> <num_servers>
+      ```
 
 4. Start the RAN simulator using the following commands:
     ```
